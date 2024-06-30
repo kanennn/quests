@@ -1,13 +1,10 @@
-package yaml
+package main
 
 import (
 	"bytes"
 	"fmt"
 	"reflect"
 	"regexp"
-
-	"github.com/kanennn/quests/internal/structures"
-	"github.com/kanennn/quests/util"
 )
 
 // yaml for personal use, not exactly standard yaml
@@ -17,7 +14,7 @@ import (
 // yams
 // delicious
 
-func MakeYamsFromTask(t structures.Task) []byte {
+func MakeYamsFromTask(t Task) []byte {
 	rv := reflect.ValueOf(t)
 	rt := reflect.TypeOf(t)
 
@@ -40,10 +37,10 @@ func MakeYamsFromTask(t structures.Task) []byte {
 	return yams
 }
 
-func ReadYamsFromFrontatter(file []byte) (t structures.Task) {
+func ReadYamsFromFrontatter(file []byte) (t Task) {
 	//literally no clue if this will work
 	re, err := regexp.Compile("---\\n([\\S\\s]+?)\n---")
-	util.Check(err)
+	Check(err)
 	yaml := re.Find(file)
 	rvp := reflect.ValueOf(&t)
 	rv := rvp.Elem()
@@ -58,7 +55,7 @@ func ReadYamsFromFrontatter(file []byte) (t structures.Task) {
 		if ft.Tag.Get("yaml") != "" {
 			l := ft.Tag.Get("yaml")
 			re, err := regexp.Compile(fmt.Sprintf(`%s:\s*(.*?)\n`, l))
-			util.Check(err)
+			Check(err)
 
 			fv.Set(reflect.ValueOf(string(re.FindSubmatch(yaml)[1])))
 		}

@@ -1,4 +1,4 @@
-package structures
+package main
 
 type priority struct {
 	name string
