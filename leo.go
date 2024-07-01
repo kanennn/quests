@@ -31,7 +31,7 @@ func ParseFiles(files [][]byte) (tasks []Task) {
 		re, err := regexp.Compile(`---[\S\s]+?---\s*([\S\s]*)`)
 		Check(err)
 		desc := re.FindSubmatch(file)[1]
-		task.Description = desc
+		task.Description = string(desc) // TODO may be needed to switch back to byte later, when the task struct is not just strings
 		tasks = append(tasks, task)
 	}
 	return tasks
@@ -47,4 +47,10 @@ func CreateTasks(tasks []Task) {
 
 	}
 	
+}
+
+func getTasks() []Task {
+    files := ReadFiles()
+	tasks := ParseFiles(files)
+    return tasks
 }

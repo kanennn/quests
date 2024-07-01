@@ -5,93 +5,133 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
-type model struct {
-    tasks []Task                // task structs loaded from local files
-    cursor   int                // which task item our cursor is pointing at
+// type subModels struct {
+//     viewer tea.Model
+//     entry tea.Model
+// }
+
+type model struct {   
+    loaded bool
+    tasks *[]Task
+    activeModel tea.Model
+    //subModels *subModels
+    viewer tea.Model
+    width int
+    height int     
+    styles *Styles
 }
 
-type Tasks []Task
-
-func readTasks() tea.Msg {
-	files := ReadFiles()
-	tasks := ParseFiles(files)
-	return Tasks(tasks)
+type initData struct {
+    tasks []Task
 }
+
+type entryReturn struct {
+    t Task
+}
+
+type loadEntry struct {}
+
+type Styles struct {
+    BorderColor lipgloss.Color
+    InputField lipgloss.Style
+    InfoBox lipgloss.Style
+    TaskBox lipgloss.Style
+    HighLightedTask lipgloss.Style
+    NormalTask lipgloss.Style
+}
+
+func DefaultStyles() *Styles {
+    s := new(Styles)
+    s.BorderColor = lipgloss.Color("#ee40f1")
+    s.InputField = lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(80) //.BorderForeground(s.BorderColor).BorderStyle(lipgloss.NormalBorder()).
+    s.InfoBox = lipgloss.NewStyle().BorderForeground(s.BorderColor).PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(48).Height(12)
+    s.TaskBox = lipgloss.NewStyle().BorderForeground(s.BorderColor).PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(30).Height(12)
+    s.HighLightedTask = lipgloss.NewStyle().Bold(true).Foreground(s.BorderColor)
+    return s
+
+}
+
+func getInitData() tea.Msg {
+	return initData{tasks: getTasks()}
+}
+
 
 func (m model) Init() (tea.Cmd) {
-	return readTasks
+	return getInitData
 }
 
+func NewModel() *model {
+    styles := DefaultStyles()
+    tasks := new([]Task)
 
+    viewer := new(viewer)
+    viewer.styles = styles
+    viewer.tasks = tasks
+
+    return &model{styles: styles, viewer: viewer, tasks: tasks, activeModel: viewer} //this is where you customize the starting scene/model
+}
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+    var cmd tea.Cmd
     switch msg := msg.(type) {
-
-    // Is it a key press?
-    case tea.KeyMsg:
-
-
-        // Cool, what was the actual key pressed?
-        switch msg.String() {
-
-        case "ctrl+c", "q":
-            return m, tea.Quit
-
-        case "up", "k":
-            if m.cursor > 0 {
-                m.cursor--
+        
+        case tea.WindowSizeMsg:
+            m.width = msg.Width
+            m.height = msg.Height
+            return m, nil
+        case initData:
+            *m.tasks = msg.tasks
+            m.loaded = true
+            return m, nil
+        case entryReturn:
+            *m.tasks = append(*m.tasks, msg.t)
+            m.activeModel = m.viewer
+            return m, nil
+        case loadEntry:
+            entry := newEntry()
+            entry.styles = m.styles
+            m.activeModel = entry
+            return m, nil
+        case tea.KeyMsg:
+            if msg.String() ==  "ctrl+c" {
+                return m, tea.Quit
+            } else {
+                m.activeModel, cmd = m.activeModel.Update(msg)
+                return m, cmd
             }
-
-        // The "down" and "j" keys move the cursor down
-        case "down", "j":
-            if m.cursor < len(m.tasks)-1 {
-                m.cursor++
-            }
-        }
-	
-	case Tasks:
-		m.tasks = msg
-	}
-
-    // Return the updated model to the Bubble Tea runtime for processing.
-    // Note that we're not returning a command.
-    return m, nil
+            
+         default: 
+            m.activeModel, cmd = m.activeModel.Update(msg)
+            return m, cmd
+    }
 }
 
 func (m model) View() string {
-
-    s := "Welcome to Quests"
-    s += "\nPress q to quit.\n\n"
-
-    // Iterate over our choices
-    for i, task := range m.tasks {
-        // Is the cursor pointing at this choice?
-        cursor := " " // no cursor
-        if m.cursor == i {
-            cursor = ">" // cursor!
-        }
-
-        // Render the row
-        s += fmt.Sprintf("%s %s\n", cursor, task.Name)
+    m.activeModel.View()
+    if m.width == 0 {
+        return "loading window"
     }
 
-    if len(m.tasks) > 0 {
-        selectedTask := m.tasks[m.cursor]
-        s += fmt.Sprintf("\n[*] %s\n[@] %s\n\n%s\n", selectedTask.Context, selectedTask.POI, selectedTask.Description)
+    if !m.loaded {
+        return "loading application"
     }
-
+    return lipgloss.Place(
+        m.width,
+        m.height,
+        lipgloss.Center,
+        lipgloss.Center,
+        m.activeModel.View(), 
+    )
     
-
-    // Send the UI for rendering
-    return s
 }
 
 func tui() {
-    p := tea.NewProgram(model{})
+    p := tea.NewProgram(NewModel(), tea.WithAltScreen())
     if _, err := p.Run(); err != nil {
-        fmt.Printf("Alas, there's been an error: %v", err)
+        fmt.Printf("Alas, there has been an error: %v", err)
         os.Exit(1)
     }
 }
