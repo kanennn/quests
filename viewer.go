@@ -52,6 +52,8 @@ func (m viewer) View() string {
         taskStr := task.Name
         if m.index == i {
             taskStr = m.styles.HighLightedTask.Render(taskStr)
+        } else {
+            taskStr = m.styles.NormalText.Render(taskStr)
         }
         taskStr += "\n"
         taskList += taskStr
@@ -59,7 +61,11 @@ func (m viewer) View() string {
 
     if len(*m.tasks) > 0 {
         selectedTask :=  (*m.tasks)[m.index]
-        infoBox = fmt.Sprintf("[*] %s\n[@] %s\n\n%s", selectedTask.Context, selectedTask.POI, selectedTask.Description)
+
+        infoTitle := m.styles.InfoBoxTitle.Render(selectedTask.Name)
+        infoBreadCrumbs := m.styles.InfoBoxBreadcrumbs.Render(fmt.Sprintf("%s * %s", selectedTask.POI, selectedTask.Context))
+        infoBoxDesc := m.styles.InfoBoxDesc.Render(selectedTask.Description)
+        infoBox = lipgloss.JoinVertical(lipgloss.Left, infoTitle, infoBreadCrumbs, infoBoxDesc)
     }
     return lipgloss.JoinHorizontal(lipgloss.Top, m.styles.TaskBox.Render(taskList), m.styles.InfoBox.Render(infoBox))
 }

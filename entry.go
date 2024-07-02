@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 type entry struct {
@@ -23,7 +22,6 @@ func newEntry() *entry {
     entry := new(entry)
 
     entry.inputField = textinput.New()
-    //entry.inputField.Placeholder = "..."
     entry.inputField.Focus()
 
     entry.fields = []field{
@@ -67,6 +65,6 @@ func (m entry) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m entry) View() string {
-    prompt := m.fields[m.index].question
-    return m.styles.InputField.Render(lipgloss.JoinVertical(lipgloss.Left, prompt, m.inputField.View()))
+    m.inputField.Placeholder = m.fields[m.index].question
+    return m.styles.InputField.Render(m.inputField.View())
 }

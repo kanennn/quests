@@ -8,16 +8,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// type subModels struct {
-//     viewer tea.Model
-//     entry tea.Model
-// }
-
 type model struct {   
     loaded bool
     tasks *[]Task
     activeModel tea.Model
-    //subModels *subModels
     viewer tea.Model
     width int
     height int     
@@ -35,21 +29,31 @@ type entryReturn struct {
 type loadEntry struct {}
 
 type Styles struct {
-    BorderColor lipgloss.Color
+    AccentColor lipgloss.Color
+    NormalText lipgloss.Style
     InputField lipgloss.Style
     InfoBox lipgloss.Style
     TaskBox lipgloss.Style
     HighLightedTask lipgloss.Style
     NormalTask lipgloss.Style
+    InfoBoxTitle lipgloss.Style
+    InfoBoxBreadcrumbs lipgloss.Style
+    InfoBoxDesc lipgloss.Style
 }
 
 func DefaultStyles() *Styles {
     s := new(Styles)
-    s.BorderColor = lipgloss.Color("#ee40f1")
-    s.InputField = lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(80) //.BorderForeground(s.BorderColor).BorderStyle(lipgloss.NormalBorder()).
-    s.InfoBox = lipgloss.NewStyle().BorderForeground(s.BorderColor).PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(48).Height(12)
-    s.TaskBox = lipgloss.NewStyle().BorderForeground(s.BorderColor).PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(30).Height(12)
-    s.HighLightedTask = lipgloss.NewStyle().Bold(true).Foreground(s.BorderColor)
+    s.AccentColor = lipgloss.Color("#0ba68a")
+    s.InputField = lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(80) //.BorderForeground(s.AccentColor).BorderStyle(lipgloss.NormalBorder()).
+    s.InfoBox = lipgloss.NewStyle().BorderForeground(s.AccentColor).PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(48).Height(12)
+    s.TaskBox = lipgloss.NewStyle().BorderForeground(s.AccentColor).PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(30).Height(12)
+    s.HighLightedTask = lipgloss.NewStyle().Bold(true).Foreground(s.AccentColor)
+    s.NormalTask = lipgloss.NewStyle()
+
+    s.InfoBoxTitle = lipgloss.NewStyle().Bold(true).Foreground(s.AccentColor)
+    s.InfoBoxBreadcrumbs = lipgloss.NewStyle().Faint(true)
+    s.InfoBoxDesc = lipgloss.NewStyle().Italic(true).Bold(true)
+
     return s
 
 }
@@ -88,6 +92,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
             return m, nil
         case entryReturn:
             *m.tasks = append(*m.tasks, msg.t)
+            CreateTasks(*m.tasks)
             m.activeModel = m.viewer
             return m, nil
         case loadEntry:
