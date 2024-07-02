@@ -51,11 +51,6 @@ func ParseFiles(files [][]byte) (tasks []Task) {
 		for _, v := range parser {
 			re, err := regexp.Compile(v.regex)
 			Check(err)
-
-			fmt.Println("Regex:")
-			fmt.Println(v.regex)
-			fmt.Print("submatch:")
-			fmt.Println(string(re.FindSubmatch(file)[1]))
 			v.fill(task, string(re.FindSubmatch(file)[1])) //TODO maybe throw []byte to imports? just depends on where i want to convert []byte to string and vice versa
 		}
 
