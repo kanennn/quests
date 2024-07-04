@@ -2,7 +2,7 @@
 
 ![icon](banner.png)
 
-A CLI application for managing your adventure
+A TUIß application for managing your adventure
 
 # installation
 
