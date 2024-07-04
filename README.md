@@ -2,7 +2,7 @@
 
 ![icon](banner.png)
 
-A TUI application for managing your adventure
+A TUI application for managing your adventure.
 
 # installation
 
