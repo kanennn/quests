@@ -26,3 +26,5 @@ playground/
 dist/
 
 quests/
+
+.DS_store
