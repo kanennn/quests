@@ -24,3 +24,5 @@ go.work.sum
 playground/
 
 dist/
+
+quests/
