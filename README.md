@@ -1,14 +1,14 @@
 # quests
 
-![icon](banner.png)
-
 A TUI application for managing your adventure.
 
-I'm literally not sure how a bright gold pixel art logo is at all related to this project but I thought it would be fun so here it is :3
+At best this is currently a developer preview. If you happen to get it working for yourself, good job and have fun with it! However this is not currently "production ready". Stay tuned though!
 
 # installation
 
 `go install github.com/kanennn/quests`
+
+_better installation coming soon i promise_
 
 ---
 
