@@ -9,9 +9,21 @@ type Task struct { //TODO this could be similar to a python dictionary if it wou
 	Description string // TODO we will need a input handler in the tui for not string inputs later
 	Completed bool 
 	Hidden bool //this is used for soft deleting, basically hiding tasks //needs to be "deactive"
+	Class class
 	// Precedence int `yaml:"precedence"`
 	// Priority priority `yaml:"priority"`
-} 
+}
+
+type class int
+
+const ( //this could use better names, like journey, adventure, hike, joust, hunt, etc
+	main_quest = iota
+	side_quest
+	mini_quest
+	sleeping_quest
+)
+
+const classLen = 4
 
 
 // These are import functions: they take in a string, and map that into the correct type for the struct field
@@ -49,6 +61,16 @@ func (t *Task) fillHidden(s string) {
 	}
 }
 
+func (t *Task) fillClass(s string) {
+	switch s {
+	case "main_quest": t.Class = main_quest
+	case "side_quest": t.Class = side_quest
+	case "mini_quest": t.Class = mini_quest
+	case "sleeping_quest": t.Class = sleeping_quest
+	default: panic(fmt.Sprintf(`Invalid class type "%s"`, s))
+	}
+}
+
 // export functions don't neccesarily need to be methods of pointers (*task)
 func (t *Task) exportName() string {return t.Name}
 func (t *Task) exportPOI() string {return t.POI}
@@ -67,5 +89,15 @@ func (t *Task) exportHidden() string {
 		return "true"
 	} else {
 		return "false"
+	}
+}
+
+func (t *Task) exportClass() string {
+	switch t.Class {
+		case main_quest: return "main_quest"
+		case side_quest: return "side_quest"
+		case mini_quest: return "mini_quest"
+		case sleeping_quest: return "sleeping_quest"
+	default: panic("What the heck is class type" + string(t.Class))
 	}
 }

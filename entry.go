@@ -18,8 +18,9 @@ type field struct {
     fill func (t *Task, s string)
 }
 
-func newEntry() *entry {
+func newEntry(c class) *entry {
     entry := new(entry)
+    entry.task.Class = c
 
     entry.inputField = textinput.New()
     entry.inputField.Focus()

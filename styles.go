@@ -6,6 +6,7 @@ type Styles struct {
     AccentColor lipgloss.Color
     NormalText lipgloss.Style
 
+    //FinalBox lipgloss.Style
     InputField lipgloss.Style
     InfoBox lipgloss.Style
 	
@@ -29,6 +30,7 @@ func DefaultStyles() *Styles {
     s.AccentColor = lipgloss.Color("#0ba68a")
     s.InputField = lipgloss.NewStyle().PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(80) //.BorderForeground(s.AccentColor).BorderStyle(lipgloss.NormalBorder()).
 	
+    //s.FinalBox = lipgloss.NewStyle().BorderForeground(s.AccentColor).Width(90).Height(12 )
 	s.InfoBox = lipgloss.NewStyle().BorderForeground(s.AccentColor).PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(48).Height(12)
 	s.TaskBox = lipgloss.NewStyle().BorderForeground(s.AccentColor).PaddingTop(1).PaddingBottom(1).PaddingRight(2).PaddingLeft(2).Width(40).Height(12)
 

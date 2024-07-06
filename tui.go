@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"sort"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -13,7 +12,7 @@ type model struct {
     loaded bool
     tasks *[]Task
     activeModel tea.Model
-    viewer tea.Model
+    viewer *viewer
     width int
     height int     
     styles *Styles
@@ -27,16 +26,10 @@ type entryReturn struct {
     t Task
 }
 
-type loadEntry struct {}
+type loadEntry struct { activeClass class}
 
 func getInitData() tea.Msg {
 	return initData{tasks: getTasks()}
-}
-
-func sortTasks(t *[]Task) {
-    sort.SliceStable(*t, func(i, j int) bool {
-        return (*t)[j].Completed
-    })
 }
 
 func (m model) Init() (tea.Cmd) {
@@ -56,27 +49,33 @@ func NewModel() *model {
 }
 
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-    var cmd tea.Cmd
-    switch msg := msg.(type) {
-        
+    var cmd tea.Cmd //only needed for a couple cases``
+    if !m.loaded {
+        switch msg := msg.(type) {
         case tea.WindowSizeMsg:
             m.width = msg.Width
             m.height = msg.Height
             return m, nil
         case initData:
             *m.tasks = msg.tasks
-            sortTasks(m.tasks)
+            m.viewer.initTasks()
             m.loaded = true
             return m, nil
+        default:
+            return m, nil
+        }    
+    } else { switch msg := msg.(type) {
         case entryReturn:
             *m.tasks = append(*m.tasks, msg.t)
             //CreateTasks(*m.tasks)
             m.activeModel = m.viewer
-            sortTasks(m.tasks)
+            m.viewer.newCategoryQuest(&(*m.tasks)[len(*m.tasks)-1])
+            m.viewer.sortCompletedTasks()
             return m, nil
         case loadEntry:
-            entry := newEntry()
+            entry := newEntry(msg.activeClass)
             entry.styles = m.styles
+            *m.viewer = m.activeModel.(viewer)
             m.activeModel = entry
             return m, nil
         case tea.KeyMsg:
@@ -91,7 +90,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
          default: 
             m.activeModel, cmd = m.activeModel.Update(msg)
             return m, cmd
-    }
+    }}
 }
 
 func (m model) View() string {
@@ -108,13 +107,13 @@ func (m model) View() string {
         m.height,
         lipgloss.Center,
         lipgloss.Center,
-        m.activeModel.View(), 
+        lipgloss.Place(0, 30, lipgloss.Left, lipgloss.Top, m.activeModel.View()),
     )
     
 }
 
 func tui() {
-    p := tea.NewProgram(NewModel(),)// tea.WithAltScreen()
+    p := tea.NewProgram(NewModel(),tea.WithAltScreen())
     if _, err := p.Run(); err != nil {
         fmt.Printf("Alas, there has been an error: %v", err)
         os.Exit(1)

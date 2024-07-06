@@ -50,6 +50,7 @@ func ParseFiles(files [][]byte) (tasks []Task) {
 		{regex: fmt.Sprintf(yamlParser, "context"), fill: (*Task).fillContext},
 		{regex: fmt.Sprintf(yamlParser, "completed"), fill: (*Task).fillCompleted},
 		{regex: fmt.Sprintf(yamlParser, "hidden"), fill: (*Task).fillHidden},
+		{regex: fmt.Sprintf(yamlParser, "class"), fill: (*Task).fillClass},
 		{regex: descParser, fill: (*Task).fillDescription},
 	}
 
@@ -78,6 +79,7 @@ func CreateTasks(tasks []Task) {
 		{yamlName: "context", export: (*Task).exportContext},
 		{yamlName: "completed", export: (*Task).exportCompleted},
 		{yamlName: "hidden", export: (*Task).exportHidden},
+		{yamlName: "class", export: (*Task).exportClass},
 	}
 	
 	for _, task := range tasks {
