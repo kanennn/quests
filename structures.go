@@ -16,6 +16,15 @@ type Task struct { //TODO this could be similar to a python dictionary if it wou
 
 type class int
 
+type classDataMap map[class]classData 
+
+type classData struct {
+	yams string // mmm yams delicious
+	print string
+}
+
+//### BEGIN CLASS HARDCODING
+
 const ( //this could use better names, like journey, adventure, hike, joust, hunt, etc
 	main_quest = iota
 	side_quest
@@ -25,9 +34,44 @@ const ( //this could use better names, like journey, adventure, hike, joust, hun
 
 const classLen = 4
 
+var dataMap classDataMap = classDataMap{
+	main_quest : classData{yams: "main_quest", print: "Main Quests"},
+	side_quest : classData{yams: "side_quest", print: "Side Quests"},
+	mini_quest : classData{yams: "mini_quest", print: "Mini Quests"},
+	sleeping_quest : classData{yams: "sleeping_quest", print: "Sleeping Quests"},
+}
+
+//### END CLASS HARDCODING
+
+type classToYamlMap map[class]string
+type yamlToClassMap map[string]class
+type classToPrintMap map[class]string
+
+// This might could be more efficient but works for now
+func GetClassToYamlMap() (classToYamlMap) {
+	ctym := make(classToYamlMap)
+	for k, v := range dataMap{
+		ctym[k] = v.yams
+	}
+	return ctym
+}
+func GetYamlToClassMap() (yamlToClassMap) {
+	ytcm := make(yamlToClassMap)
+	for k, v := range dataMap{
+		ytcm[v.yams] = k
+	}
+	return ytcm
+}
+func GetClassToPrintMap() (classToPrintMap) {
+	ctpm := make(classToPrintMap)
+	for k, v := range dataMap{
+		ctpm[k] = v.print
+ 	
+	}
+	return ctpm
+}
 
 // These are import functions: they take in a string, and map that into the correct type for the struct field
-// TODO We may eventually need export functions for mapping struct fields into strings
 func (t *Task) fillName(s string) {
 	t.Name = s
 }
@@ -62,13 +106,7 @@ func (t *Task) fillHidden(s string) {
 }
 
 func (t *Task) fillClass(s string) {
-	switch s {
-	case "main_quest": t.Class = main_quest
-	case "side_quest": t.Class = side_quest
-	case "mini_quest": t.Class = mini_quest
-	case "sleeping_quest": t.Class = sleeping_quest
-	default: panic(fmt.Sprintf(`Invalid class type "%s"`, s))
-	}
+	t.Class = GetYamlToClassMap()[s]
 }
 
 // export functions don't neccesarily need to be methods of pointers (*task)
@@ -93,11 +131,5 @@ func (t *Task) exportHidden() string {
 }
 
 func (t *Task) exportClass() string {
-	switch t.Class {
-		case main_quest: return "main_quest"
-		case side_quest: return "side_quest"
-		case mini_quest: return "mini_quest"
-		case sleeping_quest: return "sleeping_quest"
-	default: panic("What the heck is class type" + string(t.Class))
-	}
+	return GetClassToYamlMap()[t.Class]
 }

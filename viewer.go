@@ -180,15 +180,8 @@ func (m viewer) View() string {
         infoBox = lipgloss.JoinVertical(lipgloss.Left, infoTitle, infoBreadCrumbs, infoBoxDesc)
     }
     mainArea := lipgloss.JoinHorizontal(lipgloss.Top ,m.styles.TaskBox.Render(taskList), m.styles.InfoBox.Render(infoBox))
-    var classHeader string
+    
+    classHeader := GetClassToPrintMap()[m.viewClass]
 
-    switch m.viewClass {
-    case main_quest: classHeader = "Main Quests"
-    case side_quest: classHeader = "Side Quests"
-    case mini_quest: classHeader = "Mini Quests"
-    case sleeping_quest: classHeader = "Sleeping Quests"
-    default: panic("Unrecognised class type on task:" + string(m.viewClass))
-        
-    }
     return lipgloss.JoinVertical(lipgloss.Left, classHeader, mainArea)
 }
