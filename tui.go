@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/charmbracelet/bubbles/cursor"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
@@ -44,6 +46,10 @@ func NewModel() *model {
     viewer.styles = styles
     viewer.tasks = tasks
     viewer.capacity = 6
+    viewer.editDesc = textinput.New() //TODO this three lines (following) could probably be moved later
+    viewer.editDesc.Prompt = ""
+    viewer.editDesc.Placeholder = "Description"
+    viewer.editDesc.Cursor.SetMode(cursor.CursorBlink)
 
     return &model{styles: styles, viewer: viewer, tasks: tasks, activeModel: viewer} //this is where you customize the starting scene/model
 }

@@ -4,12 +4,16 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
+
+type editDescriptionField textinput.Model
+
 type viewer struct {
-    //models *subModels
+    editDesc textinput.Model
     tasks *[]Task
     categories map[class][]*Task
     enabledTasks []*Task
@@ -75,44 +79,62 @@ func (m viewer) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
     var cmd tea.Cmd 
     switch msg := msg.(type) {
 
-        case tea.KeyMsg:    
-            switch msg.String() {
+        case tea.KeyMsg:
+            if m.editDesc.Focused() {
+                switch msg.String() {
+                case "enter":
+                    (*(m.categories[m.viewClass])[m.index]).Description = m.editDesc.Value()
+                    m.editDesc.Blur()
+                default: 
+                    m.editDesc, cmd = m.editDesc.Update(msg) 
+                    return m, cmd
+                    //TODO this system could be less clunky and be improved
+                }
                 
-            case "up":
-                if m.index > 0 {
-                    m.index--
+            } else {
+                switch msg.String() {
+                case "up":
+                    if m.index > 0 {
+                        m.index--
+                    }
+                    if m.index == m.view && m.view > 0 {
+                        m.view--
+                    }
+                case "down":
+                    if m.index < len(m.categories[m.viewClass])-1 {
+                        m.index++
+                    }
+                    if m.index == m.view+m.capacity-1 && m.view+m.capacity < len(m.categories[m.viewClass]) {
+                        m.view++
+                    }
+                case "c":
+                    if len(m.categories[m.viewClass]) > 0 {
+                        (*(m.categories[m.viewClass][m.index])).Completed = !(*(m.categories[m.viewClass])[m.index]).Completed
+                        m.sortCompletedTasks()
+                    }
+                case "x":
+                    if len(m.categories[m.viewClass]) > 0 {
+                        (*(m.categories[m.viewClass])[m.index]).Hidden = true
+                        m.updateTasks()
+                        if m.index+1 > len(m.categories[m.viewClass]) {m.index--}
+                        if m.view+m.capacity > len(m.categories[m.viewClass]) && m.view > 0 {m.view--}
+                    }
+                    //this is just initTasks should i change it back to that lol
+                case "tab":
+                    if m.viewClass < classLen-1 {m.viewClass++} else {m.viewClass = 0}
+                    m.index = 0
+                    m.view = 0
+                case "n":
+                    cmd = func () tea.Msg {return loadEntry{activeClass: m.viewClass}}
+                case "enter":
+                    m.editDesc.SetValue((*(m.categories[m.viewClass])[m.index]).Description)
+                    m.editDesc.Focus()
                 }
-                if m.index == m.view+1 && m.view > 0 {
-                    m.view--
-                }
-            case "down":
-                if m.index < len(m.categories[m.viewClass])-1 {
-                    m.index++
-                }
-                if m.index == m.view+m.capacity-1 && m.view+m.capacity < len(m.categories[m.viewClass]) {
-                    m.view++
-                }
-            case "c":
-                if len(m.categories[m.viewClass]) > 0 {
-                    (*(m.categories[m.viewClass][m.index])).Completed = !(*(m.categories[m.viewClass])[m.index]).Completed
-                    m.sortCompletedTasks()
-                }
-            case "x":
-                if len(m.categories[m.viewClass]) > 0 {
-                    (*(m.categories[m.viewClass])[m.index]).Hidden = true
-                    m.updateTasks()
-                    if m.index+1 > len(m.categories[m.viewClass]) {m.index--}
-                    if m.view+m.capacity > len(m.categories[m.viewClass]) && m.view > 0 {m.view--}
-                }
-                 //this is just initTasks should i change it back to that lol
-            case "tab":
-                if m.viewClass < classLen-1 {m.viewClass++} else {m.viewClass = 0}
-                m.index = 0
-                m.view = 0
-            case "n":
-                cmd = func () tea.Msg {return loadEntry{activeClass: m.viewClass}}
             }   
     }
+        if m.editDesc.Focused() {  //TODO this system could be less clunky and be improved
+            m.editDesc, cmd = m.editDesc.Update(msg)
+        }
     return m, cmd
 }
 
@@ -167,14 +189,22 @@ func (m viewer) View() string {
         var infoTitle string
         var infoBreadCrumbs string
         var infoBoxDesc string
+        var description string
+
+        if m.editDesc.Focused() {
+            description = m.editDesc.View()
+        } else {
+            description = selectedTask.Description
+        }
+
         if !selectedTask.Completed {
             infoTitle = m.styles.InfoBoxTitle.Render(selectedTask.Name)
             infoBreadCrumbs = m.styles.InfoBoxBreadcrumbs.Render(fmt.Sprintf("%s * %s", selectedTask.POI, selectedTask.Context))
-            infoBoxDesc = m.styles.InfoBoxDesc.Render(selectedTask.Description)
+            infoBoxDesc = m.styles.InfoBoxDesc.Render(description)
         } else {
             infoTitle = m.styles.CompletedInfoBoxTitle.Render(selectedTask.Name)
             infoBreadCrumbs = m.styles.CompletedInfoBoxBreadcrumbs.Render(fmt.Sprintf("%s * %s", selectedTask.POI, selectedTask.Context))
-            infoBoxDesc = m.styles.CompletedInfoBoxDesc.Render(selectedTask.Description)
+            infoBoxDesc = m.styles.CompletedInfoBoxDesc.Render(description)
         }
         
         infoBox = lipgloss.JoinVertical(lipgloss.Left, infoTitle, infoBreadCrumbs, infoBoxDesc)
