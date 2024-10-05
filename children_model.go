@@ -10,6 +10,10 @@ type children_model struct {
 	quest *quest
 }
 
+func (m children_model) name() string {
+	return "children"
+}
+
 func (m children_model) Init() tea.Cmd {
 	return nil
 }

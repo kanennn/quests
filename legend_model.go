@@ -10,6 +10,10 @@ type legend_model struct {
 	quest *quest
 }
 
+func (m legend_model) name() string {
+	return "legend"
+}
+
 func (m legend_model) Init() tea.Cmd {
 	return nil
 }

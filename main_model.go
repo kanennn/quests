@@ -9,21 +9,28 @@ import (
 
 type wait_model struct{}
 
+func (m wait_model) name() string                            { return "wait" }
 func (m wait_model) Init() tea.Cmd                           { return nil }
 func (m wait_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) { return m, nil }
 func (m wait_model) View() string                            { return "loading" }
 
 type main_model struct {
-	active_model tea.Model
+	active_model quest_model
 	active_quest *quest
 	models       struct {
 		info_model     *info_model
 		legend_model   *legend_model
 		children_model *children_model
+		lore_model     *lore_model
 	}
 }
 
-type model_load struct{ m tea.Model }
+type quest_model interface {
+	tea.Model
+	name() string
+}
+
+type model_load struct{ m quest_model }
 
 //todo how do we like, have pointers to sub and super quests without creating a recursive nightmare but that sort of preloads them
 //todo mayhaps active quests load name, desc, files, logs, info, and subquests/superquests
@@ -46,6 +53,9 @@ func (m main_model) Init() tea.Cmd {
 		}, func() tea.Msg {
 			return model_load{m: new(children_model)}
 		},
+		func() tea.Msg {
+			return model_load{m: new(lore_model)}
+		},
 	)
 }
 
@@ -66,8 +76,11 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case *children_model:
 			(msg.m.(*children_model)).quest = m.active_quest
 			m.models.children_model = msg.m.(*children_model)
+		case *lore_model:
+			(msg.m.(*lore_model)).quest = m.active_quest
+			m.models.lore_model = msg.m.(*lore_model)
 		}
-	case tea.Model:
+	case quest_model:
 		m.active_model = msg
 	case tea.KeyMsg:
 		switch key := msg.String(); key {
@@ -79,6 +92,8 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = func() tea.Msg { return m.models.legend_model } //this will break if the model is not loaded yet
 		case "3":
 			cmd = func() tea.Msg { return m.models.children_model } //this will break if the model is not loaded yet
+		case "4":
+			cmd = func() tea.Msg { return m.models.lore_model } //this will break if the model is not loaded yet
 			// case "enter":
 			// 	i, ok := m.list.SelectedItem().(item)
 			// 	if ok {
@@ -97,8 +112,9 @@ func (m main_model) View() string {
 	if m.active_quest != nil {
 
 		head := m.active_quest.Name
+		view := m.active_model.name()
 		active_view := m.active_model.View()
-		return head + "\n" + active_view
+		return view + "@" + head + "\n\n" + active_view
 	} else {
 		return "aaAA"
 	}
@@ -107,7 +123,7 @@ func (m main_model) View() string {
 func tui() {
 	m := new(main_model)
 	m.active_model = new(wait_model)
-	p := tea.NewProgram(m)
+	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there has been an error: %v", err)
 		os.Exit(1)
