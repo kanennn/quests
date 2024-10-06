@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -43,7 +44,11 @@ func (m main_model) Init() tea.Cmd {
 		},
 		func() tea.Msg {
 			q := new(quest)
-			q.peek("")
+			ex, err := os.Executable()
+			Check(err)
+			dir := filepath.Dir(ex)
+			dir, _ = os.Getwd()
+			q.peek(dir)
 			q.open()
 			return q
 		}, func() tea.Msg {
@@ -100,6 +105,16 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = func() tea.Msg { return &m.models.children_model } //this will break if the model is not loaded yet
 		case "4":
 			cmd = func() tea.Msg { return &m.models.lore_model } //this will break if the model is not loaded yet
+		case "esc":
+			if m.active_quest.parent != nil {
+				return m, func() tea.Msg {
+					c := m.active_quest.parent
+					c.open()
+					return *c
+				}
+			} else {
+				panic("AAA")
+			}
 		default:
 			m.active_model, cmd = m.active_model.Update(msg)
 

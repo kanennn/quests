@@ -15,6 +15,7 @@ type quest struct {
 	dir         string
 	legend      []*entry
 	children    []*quest
+	parent      *quest
 	lore        []byte
 	Name        string
 	Description string
@@ -39,16 +40,18 @@ func (q *quest) open() {
 	q.read_legend()
 	q.read_lore()
 	q.read_children()
+	q.read_parent()
 }
 
 func (q *quest) read_legend() error {
 
 	file, err := os.Open(filepath.Join(q.dir, "legend.log"))
-	defer func() { Check(file.Close()) }()
+
 	if os.IsNotExist(err) {
 		return err
 	} else {
 		Check(err)
+		defer func() { err := file.Close(); Check(err) }()
 	}
 
 	bufScanner := bufio.NewScanner(file)
@@ -90,11 +93,11 @@ func (q *quest) read_metadata() error {
 
 func (q *quest) read_lore() error {
 	file, err := os.Open(filepath.Join(q.dir, "lore.md"))
-	defer func() { Check(file.Close()) }()
 	if os.IsNotExist(err) {
 		return err
 	} else {
 		Check(err)
+		defer func() { err := file.Close(); Check(err) }()
 	}
 
 	data, err := io.ReadAll(file)
@@ -128,6 +131,18 @@ func (q *quest) read_children() {
 		}
 	}
 	q.children = quests
+}
+
+func (q *quest) read_parent() {
+	dir := filepath.Dir(q.dir)
+
+	p := new(quest)
+	err := p.peek(dir)
+
+	if !os.IsNotExist(err) {
+		Check(err)
+		q.parent = p
+	}
 }
 
 // func (q *quest) write(E entry) {
