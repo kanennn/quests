@@ -4,14 +4,13 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type children_model struct {
-	quest *quest
-}
-
-func (m children_model) name() string {
-	return "children"
+	quest  *quest
+	models *models
+	index  int
 }
 
 func (m children_model) Init() tea.Cmd {
@@ -19,13 +18,42 @@ func (m children_model) Init() tea.Cmd {
 }
 
 func (m children_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m, nil
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch key := msg.String(); key {
+		case "down":
+			if m.index < (len((*m.quest).children) - 1) {
+				m.index += 1
+			} else {
+				m.index = 0
+			}
+		case "up":
+			if m.index > 0 {
+				m.index -= 1
+			} else {
+				m.index += len(m.quest.children) - 1
+			}
+		case "enter":
+			return &m, tea.Sequence(func() tea.Msg {
+				c := m.quest.children[m.index]
+				c.open()
+				return *c
+			}, func() tea.Msg {
+				return &m.models.info_model
+			})
+		}
+	}
+	return &m, nil
 }
 
 func (m children_model) View() string {
 	var right []string
-	for _, v := range m.quest.children {
-		right = append(right, v.Name+" "+v.Description+"$$$")
+	for i, v := range m.quest.children {
+		entry := v.Name + " " + v.Description + "$$$"
+		if m.index == i {
+			entry = lipgloss.NewStyle().Bold(true).Render(entry)
+		}
+		right = append(right, entry)
 	}
 	return strings.Join(right, "\n")
 }

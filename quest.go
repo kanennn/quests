@@ -35,8 +35,7 @@ func (q *quest) peek(path string) error {
 	return err
 }
 
-func (q *quest) open(path string) {
-	q.peek(path)
+func (q *quest) open() {
 	q.read_legend()
 	q.read_lore()
 	q.read_children()

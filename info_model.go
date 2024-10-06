@@ -8,16 +8,12 @@ type info_model struct {
 	quest *quest
 }
 
-func (m info_model) name() string {
-	return "info"
-}
-
 func (m info_model) Init() tea.Cmd {
 	return nil
 }
 
 func (m info_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m, nil
+	return &m, nil
 }
 
 func (m info_model) View() string {
