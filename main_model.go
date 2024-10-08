@@ -112,8 +112,6 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					c.open()
 					return *c
 				}
-			} else {
-				panic("AAA")
 			}
 		default:
 			m.active_model, cmd = m.active_model.Update(msg)
