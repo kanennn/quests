@@ -75,6 +75,21 @@ func (q *quest) read_legend() error {
 	return err
 }
 
+func (q *quest) write_legend() {
+
+	file, err := os.Create(filepath.Join(q.dir, "legend.log"))
+	Check(err)
+
+	defer func() ( err := file.Close(); Check(err) }()
+
+	bufScanner := bufio.NewScanner(file)
+
+	for _, E := range(q.legend) {
+		bufWriter.Write([]byte(E.time.Format(layout) + " " + E.tag + " " + E.text))
+	}
+	
+}
+
 func (q *quest) read_metadata() error {
 	data, err := os.ReadFile(filepath.Join(q.dir, "quest.yml"))
 	if os.IsNotExist(err) {
@@ -82,13 +97,24 @@ func (q *quest) read_metadata() error {
 	} else {
 		Check(err)
 	}
-
-	// data, err := io.ReadAll(file)
+	
 	Check(err)
 	err = yaml.Unmarshal(data, q)
 	Check(err)
 
 	return err
+}
+
+func (q *quest) write_metadata() {
+	file, err := os.Create(filepath.Join(q.dir, "quest.yml"))
+	Check(err)
+
+	defer func() ( err := file.Close(); Check(err) }()
+	
+	data, err := yaml.Marshal(q)
+	Check(err)
+
+	file.write(data)
 }
 
 func (q *quest) read_lore() error {
@@ -105,6 +131,15 @@ func (q *quest) read_lore() error {
 	q.lore = data
 
 	return err
+}
+
+func (q *quest) write_lore() {
+	file, err := os.Create(filepath.Join(q.dir, "lore.md"))
+	Check(err)
+	defer func() { err := file.Close(); Check(err) }()
+	
+	_, err := file.write(q.lore)
+	Check(err)
 }
 
 func (q *quest) read_children() {
@@ -145,6 +180,11 @@ func (q *quest) read_parent() {
 	}
 }
 
+func (q *quest) write_all() {
+	q.write_metadata()
+	q.write_lore()
+	q.write_legend()
+}
 // func (q *quest) write(E entry) {
 // 	bufWriter.Write([]byte(E.time.Format(layout) + "" + E.tag + E.text))
 // }

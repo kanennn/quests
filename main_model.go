@@ -156,7 +156,7 @@ func (m main_model) View() string {
 func tui() {
 	m := new(main_model)
 	m.active_model = new(wait_model)
-	p := tea.NewProgram(m)
+	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there has been an error: %v", err)
 		os.Exit(1)

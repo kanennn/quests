@@ -34,6 +34,7 @@ func (m children_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.index += len(m.quest.children) - 1
 			}
 		case "enter":
+			if len(m.quest.children) > 0 {
 			return &m, tea.Sequence(func() tea.Msg {
 				c := m.quest.children[m.index]
 				c.open()
@@ -41,6 +42,7 @@ func (m children_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}, func() tea.Msg {
 				return &m.models.info_model
 			})
+			}
 		}
 	}
 	return &m, nil
