@@ -80,9 +80,9 @@ func (q *quest) write_legend() {
 	file, err := os.Create(filepath.Join(q.dir, "legend.log"))
 	Check(err)
 
-	defer func() ( err := file.Close(); Check(err) }()
+	defer func() { err := file.Close(); Check(err) }()
 
-	bufScanner := bufio.NewScanner(file)
+	bufWriter := bufio.NewWriter(file)
 
 	for _, E := range(q.legend) {
 		bufWriter.Write([]byte(E.time.Format(layout) + " " + E.tag + " " + E.text))
@@ -109,12 +109,12 @@ func (q *quest) write_metadata() {
 	file, err := os.Create(filepath.Join(q.dir, "quest.yml"))
 	Check(err)
 
-	defer func() ( err := file.Close(); Check(err) }()
+	defer func() { err := file.Close(); Check(err) }()
 	
 	data, err := yaml.Marshal(q)
 	Check(err)
 
-	file.write(data)
+	file.Write(data)
 }
 
 func (q *quest) read_lore() error {
@@ -138,7 +138,7 @@ func (q *quest) write_lore() {
 	Check(err)
 	defer func() { err := file.Close(); Check(err) }()
 	
-	_, err := file.write(q.lore)
+	_, err = file.Write(q.lore)
 	Check(err)
 }
 
