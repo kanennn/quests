@@ -84,10 +84,10 @@ func (q *quest) write_legend() {
 
 	bufWriter := bufio.NewWriter(file)
 
-	for _, E := range(q.legend) {
+	for _, E := range q.legend {
 		bufWriter.Write([]byte(E.time.Format(layout) + " " + E.tag + " " + E.text))
 	}
-	
+
 }
 
 func (q *quest) read_metadata() error {
@@ -97,7 +97,7 @@ func (q *quest) read_metadata() error {
 	} else {
 		Check(err)
 	}
-	
+
 	Check(err)
 	err = yaml.Unmarshal(data, q)
 	Check(err)
@@ -110,7 +110,7 @@ func (q *quest) write_metadata() {
 	Check(err)
 
 	defer func() { err := file.Close(); Check(err) }()
-	
+
 	data, err := yaml.Marshal(q)
 	Check(err)
 
@@ -137,7 +137,7 @@ func (q *quest) write_lore() {
 	file, err := os.Create(filepath.Join(q.dir, "lore.md"))
 	Check(err)
 	defer func() { err := file.Close(); Check(err) }()
-	
+
 	_, err = file.Write(q.lore)
 	Check(err)
 }
@@ -156,10 +156,10 @@ func (q *quest) read_children() {
 	quests := []*quest{}
 	for _, dir := range dirs {
 		if dir.IsDir() {
-			q := new(quest)
-			err = q.peek(filepath.Join(q.dir, dir.Name()))
+			n := new(quest)
+			err = n.peek(filepath.Join(q.dir, dir.Name()))
 			if err == nil {
-				quests = append(quests, q)
+				quests = append(quests, n)
 			} else if !os.IsNotExist(err) {
 				panic(err)
 			}
@@ -180,11 +180,14 @@ func (q *quest) read_parent() {
 	}
 }
 
+func (q *quest) write_dir() {
+	err := os.Mkdir(q.dir, os.ModePerm)
+	Check(err)
+}
+
 func (q *quest) write_all() {
+	q.write_dir()
 	q.write_metadata()
 	q.write_lore()
 	q.write_legend()
 }
-// func (q *quest) write(E entry) {
-// 	bufWriter.Write([]byte(E.time.Format(layout) + "" + E.tag + E.text))
-// }

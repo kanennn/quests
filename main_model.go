@@ -71,9 +71,16 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case *models:
 		m.models = msg
 	case (*quest):
+		// should only be used once, before other models load
+		// initial load
 		m.active_quest = msg
+
+		if msg.parent != nil && (msg.Name == msg.parent.Name || msg.Description == msg.parent.Description) {
+			panic(msg.Name + " " + msg.parent.Name)
+		}
 	case quest:
 		*m.active_quest = msg
+		m.active_model = &m.models.info_model
 	case model_load:
 		switch msg.m.(type) {
 		case *info_model:
@@ -109,10 +116,12 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.active_quest.parent != nil {
 				return m, func() tea.Msg {
 					c := m.active_quest.parent
-					c.open()
+					c.open() // i don't think this matters when the parent has already been opened. maybe we check for that // actually it helps to refresh because it rereads
 					return *c
 				}
 			}
+		case "n":
+			return m, func() tea.Msg { return new_entry_model(m.active_quest) }
 		default:
 			m.active_model, cmd = m.active_model.Update(msg)
 
@@ -143,6 +152,8 @@ func (m main_model) View() string {
 			view = "children"
 		case *lore_model:
 			view = "lore"
+		case *entry_model:
+			view = "new"
 		}
 
 		head := m.active_quest.Name
@@ -156,7 +167,7 @@ func (m main_model) View() string {
 func tui() {
 	m := new(main_model)
 	m.active_model = new(wait_model)
-	p := tea.NewProgram(m, tea.WithAltScreen())
+	p := tea.NewProgram(m) // tea.WithAltScreen()
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there has been an error: %v", err)
 		os.Exit(1)
