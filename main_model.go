@@ -102,16 +102,16 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.active_model = msg
 	case tea.KeyMsg:
 		switch key := msg.String(); key {
-		case "q", "ctrl+c":
+		case "ctrl+q", "ctrl+c":
 			return m, tea.Quit
-		case "1":
-			cmd = func() tea.Msg { return &m.models.info_model } //this will break if the model is not loaded yet
-		case "2":
-			cmd = func() tea.Msg { return &m.models.legend_model } //this will break if the model is not loaded yet
-		case "3":
-			cmd = func() tea.Msg { return &m.models.children_model } //this will break if the model is not loaded yet
-		case "4":
-			cmd = func() tea.Msg { return &m.models.lore_model } //this will break if the model is not loaded yet
+		case "ctrl+1":
+			cmd = func() tea.Msg { return &m.models.info_model } // this will break if the model is not loaded yet
+		case "ctrl+2":
+			cmd = func() tea.Msg { return &m.models.legend_model } // this will break if the model is not loaded yet
+		case "ctrl+3c":
+			cmd = func() tea.Msg { return &m.models.children_model } // this will break if the model is not loaded yet
+		case "ctrl+4":
+			cmd = func() tea.Msg { return &m.models.lore_model } // this will break if the model is not loaded yet
 		case "esc":
 			if m.active_quest.parent != nil {
 				return m, func() tea.Msg {
@@ -120,7 +120,7 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					return *c
 				}
 			}
-		case "n":
+		case "ctrl+n":
 			return m, func() tea.Msg { return new_entry_model(m.active_quest) }
 		default:
 			m.active_model, cmd = m.active_model.Update(msg)
@@ -133,9 +133,9 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			// 	return m, tea.Quit
 		}
 	default:
-		//fmt.Printf("unhandled message: %T", msg)
+		// fmt.Printf("unhandled message: %T", msg)
 	}
-	//m.active_model.Update(msg)
+	// m.active_model.Update(msg)
 	return m, cmd
 }
 
