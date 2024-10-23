@@ -104,13 +104,13 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch key := msg.String(); key {
 		case "ctrl+q", "ctrl+c":
 			return m, tea.Quit
-		case "ctrl+1":
+		case "1":
 			cmd = func() tea.Msg { return &m.models.info_model } // this will break if the model is not loaded yet
-		case "ctrl+2":
+		case "2":
 			cmd = func() tea.Msg { return &m.models.legend_model } // this will break if the model is not loaded yet
-		case "ctrl+3c":
+		case "3":
 			cmd = func() tea.Msg { return &m.models.children_model } // this will break if the model is not loaded yet
-		case "ctrl+4":
+		case "4":
 			cmd = func() tea.Msg { return &m.models.lore_model } // this will break if the model is not loaded yet
 		case "esc":
 			if m.active_quest.parent != nil {
