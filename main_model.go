@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -55,12 +56,16 @@ func (m main_model) Init() tea.Cmd {
 			return model_load{m: new(info_model)}
 		},
 		func() tea.Msg {
-			return model_load{m: new(legend_model)}
+			mm := new(legend_model)
+			mm.field = textinput.New()
+			return model_load{m: mm}
 		}, func() tea.Msg {
 			return model_load{m: new(children_model)}
 		},
 		func() tea.Msg {
-			return model_load{m: new(lore_model)}
+			mm := new(lore_model)
+			mm.field = textinput.New()
+			return model_load{m: mm}
 		},
 	)
 }

@@ -44,7 +44,6 @@ func (q *quest) open() {
 }
 
 func (q *quest) read_legend() error {
-
 	file, err := os.Open(filepath.Join(q.dir, "legend.log"))
 
 	if os.IsNotExist(err) {
@@ -76,7 +75,6 @@ func (q *quest) read_legend() error {
 }
 
 func (q *quest) write_legend() {
-
 	file, err := os.Create(filepath.Join(q.dir, "legend.log"))
 	Check(err)
 
@@ -85,9 +83,9 @@ func (q *quest) write_legend() {
 	bufWriter := bufio.NewWriter(file)
 
 	for _, E := range q.legend {
-		bufWriter.Write([]byte(E.time.Format(layout) + " " + E.tag + " " + E.text))
+		bufWriter.Write([]byte(E.time.Format(layout) + " " + E.tag + " " + E.text + "\n"))
 	}
-
+	bufWriter.Flush()
 }
 
 func (q *quest) read_metadata() error {
