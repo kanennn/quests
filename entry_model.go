@@ -52,8 +52,17 @@ func new_entry_model(q *quest) tea.Model {
 	m.old_quest = *q
 	m.new_quest = quest{}
 	m.fields = []field_struct{
-		{name: "name", typ: str, fill: func(q *quest, i interface{}) { q.Name = i.(string) }},
-		{name: "description", typ: str, fill: func(q *quest, i interface{}) { q.Description = i.(string) }},
+		{name: "title", typ: str, fill: func(q *quest, i interface{}) { q.Title = i.(string) }},
+		{
+			name: "subtitle",
+			typ:  str,
+			fill: func(q *quest, i interface{}) { q.Subtitle = i.(string) },
+		},
+		{
+			name: "description",
+			typ:  str,
+			fill: func(q *quest, i interface{}) { q.Description = i.(string) },
+		},
 	}
 	m.switch_field()
 
@@ -63,6 +72,7 @@ func new_entry_model(q *quest) tea.Model {
 func (m entry_model) Init() tea.Cmd {
 	return nil // no need for async init right now
 }
+
 func (m entry_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
@@ -74,7 +84,7 @@ func (m entry_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			if (m.index + 1) >= len(m.fields) {
 				m.new_quest.parent = &m.old_quest
-				m.new_quest.dir = filepath.Join(m.old_quest.dir, strings.ToLower(strings.ReplaceAll(m.new_quest.Name, " ", "_")))
+				m.new_quest.dir = filepath.Join(m.old_quest.dir, strings.ToLower(strings.ReplaceAll(m.new_quest.Title, " ", "_")))
 				m.new_quest.write_all()
 				cmd = func() tea.Msg {
 					return m.new_quest

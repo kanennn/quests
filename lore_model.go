@@ -21,14 +21,18 @@ func (m lore_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.field = msg
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "e":
-			m.field.SetValue(string(m.quest.lore))
-			m.field.Focus()
+		case "ctrl+e":
+			if !m.field.Focused() {
+				m.field.SetValue(string(m.quest.lore))
+				m.field.Focus()
+			}
 		case "enter":
-			m.quest.lore = []byte(m.field.Value())
-			m.quest.write_lore()
-			m.field.Blur()
-		case "c":
+			if m.field.Focused() {
+				m.quest.lore = []byte(m.field.Value())
+				m.quest.write_lore()
+				m.field.Blur()
+			}
+		case "ctrl+u":
 			m.field.Reset()
 			m.field.Blur()
 		default:
@@ -37,7 +41,7 @@ func (m lore_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	default:
 		m.field, cmd = m.field.Update(msg)
 	}
-	return &m, cmd
+	return m, cmd
 }
 
 func (m lore_model) View() string {

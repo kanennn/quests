@@ -7,6 +7,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type wait_model struct{}
@@ -18,17 +19,16 @@ func (m wait_model) View() string                            { return "loading" 
 type main_model struct {
 	active_model tea.Model
 	active_quest *quest
-	models       *models
+	styles       styles
+	models       models
+	width        int
+	height       int
 }
 
 type models struct {
 	info_model     info_model
-	legend_model   legend_model
 	children_model children_model
-	lore_model     lore_model
 }
-
-type model_load struct{ m tea.Model }
 
 //todo how do we like, have pointers to sub and super quests without creating a recursive nightmare but that sort of preloads them
 //todo mayhaps active quests load name, desc, files, logs, info, and subquests/superquests
@@ -38,11 +38,52 @@ type model_load struct{ m tea.Model }
 //* so maybe it's just like a viewer, and you call other things to change into other things lol
 //* idk rly
 
+func init_models(q *quest, s styles) models {
+	im := info_model{}
+	im.quest = q
+	im.styles = s
+
+	lgm := legend_model{}
+	lgm.field = textinput.New()
+	lgm.quest = im.quest
+	im.models.legend_model = lgm
+
+	lm := lore_model{}
+	lm.field = textinput.New()
+	lm.quest = im.quest
+	im.models.lore_model = lm
+
+	im.active_model = &im.models.legend_model
+
+	cm := children_model{}
+	cm.quest = q
+	cm.s = s
+
+	return models{
+		info_model:     im,
+		children_model: cm,
+	}
+}
+
+func (m main_model) post_init() main_model {
+	m.styles = default_styles()
+	m.models = init_models(m.active_quest, m.styles)
+	m.active_model = m.models.info_model
+	return m
+}
+
+func (m main_model) refill_models() main_model {
+	switch am := m.active_model.(type) {
+	case info_model:
+		m.models.info_model = am
+	case children_model:
+		m.models.children_model = am
+	}
+	return m
+}
+
 func (m main_model) Init() tea.Cmd {
 	return tea.Sequence(
-		func() tea.Msg {
-			return new(models)
-		},
 		func() tea.Msg {
 			q := new(quest)
 			ex, err := os.Executable()
@@ -52,20 +93,9 @@ func (m main_model) Init() tea.Cmd {
 			q.peek(dir)
 			q.open()
 			return q
-		}, func() tea.Msg {
-			return model_load{m: new(info_model)}
 		},
 		func() tea.Msg {
-			mm := new(legend_model)
-			mm.field = textinput.New()
-			return model_load{m: mm}
-		}, func() tea.Msg {
-			return model_load{m: new(children_model)}
-		},
-		func() tea.Msg {
-			mm := new(lore_model)
-			mm.field = textinput.New()
-			return model_load{m: mm}
+			return default_styles()
 		},
 	)
 }
@@ -73,50 +103,28 @@ func (m main_model) Init() tea.Cmd {
 func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
-	case *models:
-		m.models = msg
+	case tea.WindowSizeMsg:
+		m.width = msg.Width
+		m.height = msg.Height
 	case (*quest):
 		// should only be used once, before other models load
 		// initial load
 		m.active_quest = msg
-
-		if msg.parent != nil && (msg.Name == msg.parent.Name || msg.Description == msg.parent.Description) {
-			panic(msg.Name + " " + msg.parent.Name)
-		}
+		m = m.post_init()
 	case quest:
 		*m.active_quest = msg
-		m.active_model = &m.models.info_model
-	case model_load:
-		switch msg.m.(type) {
-		case *info_model:
-			(msg.m.(*info_model)).quest = m.active_quest
-			m.models.info_model = *(msg.m.(*info_model))
-			m.active_model = msg.m
-		case *legend_model:
-			(msg.m.(*legend_model)).quest = m.active_quest
-			m.models.legend_model = *msg.m.(*legend_model)
-		case *children_model:
-			(msg.m.(*children_model)).quest = m.active_quest
-			(msg.m.(*children_model)).models = m.models
-			m.models.children_model = *msg.m.(*children_model)
-		case *lore_model:
-			(msg.m.(*lore_model)).quest = m.active_quest
-			m.models.lore_model = *msg.m.(*lore_model)
-		}
-	case tea.Model:
-		m.active_model = msg
+		m.models = init_models(m.active_quest, m.styles)
+		m.active_model = m.models.info_model
 	case tea.KeyMsg:
 		switch key := msg.String(); key {
 		case "ctrl+q", "ctrl+c":
 			return m, tea.Quit
 		case "1":
-			cmd = func() tea.Msg { return &m.models.info_model } // this will break if the model is not loaded yet
+			m = m.refill_models()
+			m.active_model = m.models.info_model
 		case "2":
-			cmd = func() tea.Msg { return &m.models.legend_model } // this will break if the model is not loaded yet
-		case "3":
-			cmd = func() tea.Msg { return &m.models.children_model } // this will break if the model is not loaded yet
-		case "4":
-			cmd = func() tea.Msg { return &m.models.lore_model } // this will break if the model is not loaded yet
+			m = m.refill_models()
+			m.active_model = m.models.children_model
 		case "esc":
 			if m.active_quest.parent != nil {
 				return m, func() tea.Msg {
@@ -126,16 +134,15 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 		case "ctrl+n":
-			return m, func() tea.Msg { return new_entry_model(m.active_quest) }
+			m.active_model = new_entry_model(m.active_quest)
 		default:
 			m.active_model, cmd = m.active_model.Update(msg)
-
 			// case "enter":
 			// 	i, ok := m.list.SelectedItem().(item)
 			// 	if ok {
 			// 		m.choice = string(i)
 			// 	}
-			// 	return m, tea.Quit
+			// 	return m, te 3a.Quit
 		}
 	default:
 		// fmt.Printf("unhandled message: %T", msg)
@@ -145,34 +152,21 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m main_model) View() string {
-	if m.active_quest != nil {
-
-		var view string
-		switch m.active_model.(type) {
-		case *info_model:
-			view = "info"
-		case *legend_model:
-			view = "legend_model"
-		case *children_model:
-			view = "children"
-		case *lore_model:
-			view = "lore"
-		case *entry_model:
-			view = "new"
-		}
-
-		head := m.active_quest.Name
-		active_view := m.active_model.View()
-		return view + "@" + head + "\n\n" + active_view
-	} else {
-		return "aaAA"
-	}
+	active_view := m.active_model.View()
+	v := active_view
+	return lipgloss.Place(
+		m.width,
+		m.height,
+		lipgloss.Center,
+		lipgloss.Center,
+		m.styles.body.Render(v),
+	)
 }
 
 func tui() {
 	m := new(main_model)
 	m.active_model = new(wait_model)
-	p := tea.NewProgram(m) // tea.WithAltScreen()
+	p := tea.NewProgram(m)
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there has been an error: %v", err)
 		os.Exit(1)

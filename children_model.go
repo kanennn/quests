@@ -1,16 +1,14 @@
 package main
 
 import (
-	"strings"
-
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 )
 
 type children_model struct {
-	quest  *quest
-	models *models
-	index  int
+	quest *quest
+	index int
+	s     styles
 }
 
 func (m children_model) Init() tea.Cmd {
@@ -43,17 +41,32 @@ func (m children_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 	}
-	return &m, nil
+	return m, nil
 }
 
 func (m children_model) View() string {
-	var right []string
+	var entries []string
+	var lower string
 	for i, v := range m.quest.children {
-		entry := v.Name + " " + v.Description + "$$$"
+		var entry string
 		if m.index == i {
-			entry = lipgloss.NewStyle().Bold(true).Render(entry)
+			entry = m.s.child_selected.Render(
+				m.s.child_title.Render(v.Title) + "\n" + v.Subtitle,
+			)
+		} else {
+			entry = m.s.child_unselected.Render(m.s.child_title.Render(v.Title) + "\n" + m.s.child_subtitle.Render(v.Subtitle))
 		}
-		right = append(right, entry)
+		entries = append(entries, entry)
 	}
-	return strings.Join(right, "\n")
+	if len(m.quest.children) > 0 {
+		lower = lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			lipgloss.JoinVertical(lipgloss.Left, entries...),
+			m.quest.children[m.index].Description,
+		)
+	} else {
+		lower = ""
+	}
+	upper := quest_header_render(m.quest, m.s)
+	return lipgloss.JoinVertical(lipgloss.Left, upper, lower)
 }

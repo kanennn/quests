@@ -17,7 +17,8 @@ type quest struct {
 	children    []*quest
 	parent      *quest
 	lore        []byte
-	Name        string
+	Title       string
+	Subtitle    string
 	Description string
 }
 
