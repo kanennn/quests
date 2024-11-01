@@ -59,14 +59,18 @@ func (m children_model) View() string {
 		entries = append(entries, entry)
 	}
 	if len(m.quest.children) > 0 {
+		entry := m.quest.children[m.index]
+		entry_info := lipgloss.JoinVertical(
+			lipgloss.Left,
+			m.s.child_info_title.Render(entry.Title),
+			m.s.child_info_subtitle.Render(entry.Subtitle))
 		lower = lipgloss.JoinHorizontal(
 			lipgloss.Top,
 			lipgloss.JoinVertical(lipgloss.Left, entries...),
-			m.quest.children[m.index].Description,
+			m.s.child_info_box.Render(entry_info),
 		)
 	} else {
 		lower = ""
 	}
-	upper := quest_header_render(m.quest, m.s)
-	return lipgloss.JoinVertical(lipgloss.Left, upper, lower)
+	return lower
 }

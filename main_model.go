@@ -26,7 +26,8 @@ type main_model struct {
 }
 
 type models struct {
-	info_model     info_model
+	lore_model     lore_model
+	legend_model   legend_model
 	children_model children_model
 }
 
@@ -39,28 +40,21 @@ type models struct {
 //* idk rly
 
 func init_models(q *quest, s styles) models {
-	im := info_model{}
-	im.quest = q
-	im.styles = s
-
 	lgm := legend_model{}
 	lgm.field = textinput.New()
-	lgm.quest = im.quest
-	im.models.legend_model = lgm
+	lgm.quest = q
 
 	lm := lore_model{}
 	lm.field = textinput.New()
-	lm.quest = im.quest
-	im.models.lore_model = lm
-
-	im.active_model = &im.models.legend_model
+	lm.quest = q
 
 	cm := children_model{}
 	cm.quest = q
 	cm.s = s
 
 	return models{
-		info_model:     im,
+		lore_model:     lm,
+		legend_model:   lgm,
 		children_model: cm,
 	}
 }
@@ -68,14 +62,16 @@ func init_models(q *quest, s styles) models {
 func (m main_model) post_init() main_model {
 	m.styles = default_styles()
 	m.models = init_models(m.active_quest, m.styles)
-	m.active_model = m.models.info_model
+	m.active_model = m.models.lore_model
 	return m
 }
 
 func (m main_model) refill_models() main_model {
 	switch am := m.active_model.(type) {
-	case info_model:
-		m.models.info_model = am
+	case lore_model:
+		m.models.lore_model = am
+	case legend_model:
+		m.models.legend_model = am
 	case children_model:
 		m.models.children_model = am
 	}
@@ -114,15 +110,18 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case quest:
 		*m.active_quest = msg
 		m.models = init_models(m.active_quest, m.styles)
-		m.active_model = m.models.info_model
+		m.active_model = m.models.lore_model
 	case tea.KeyMsg:
 		switch key := msg.String(); key {
 		case "ctrl+q", "ctrl+c":
 			return m, tea.Quit
 		case "1":
 			m = m.refill_models()
-			m.active_model = m.models.info_model
+			m.active_model = m.models.lore_model
 		case "2":
+			m = m.refill_models()
+			m.active_model = m.models.legend_model
+		case "3":
 			m = m.refill_models()
 			m.active_model = m.models.children_model
 		case "esc":
@@ -152,21 +151,44 @@ func (m main_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m main_model) View() string {
-	active_view := m.active_model.View()
-	v := active_view
+	var body string
+	switch m.active_model.(type) {
+	case *wait_model:
+		body = m.active_model.View()
+	default:
+		body = header_view(m.active_quest, m.styles, m.active_model.View())
+	}
+
 	return lipgloss.Place(
 		m.width,
 		m.height,
 		lipgloss.Center,
 		lipgloss.Center,
-		m.styles.body.Render(v),
+		m.styles.body.Render(body),
 	)
+}
+
+func header_view(q *quest, s styles, content string) string {
+	header := lipgloss.JoinVertical(
+		lipgloss.Left,
+		lipgloss.PlaceHorizontal(
+			s.inside_width,
+			lipgloss.Center,
+			s.quest_title.Render(q.Title),
+			s.quest_title_whitespace...),
+		lipgloss.PlaceHorizontal(
+			s.inside_width,
+			lipgloss.Center,
+			s.quest_subtitle.Render(q.Subtitle),
+		),
+	)
+	return lipgloss.JoinVertical(lipgloss.Left, header, content, s.footer.Render(q.dir))
 }
 
 func tui() {
 	m := new(main_model)
 	m.active_model = new(wait_model)
-	p := tea.NewProgram(m)
+	p := tea.NewProgram(m, tea.WithAltScreen())
 	if _, err := p.Run(); err != nil {
 		fmt.Printf("Alas, there has been an error: %v", err)
 		os.Exit(1)

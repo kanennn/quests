@@ -27,8 +27,6 @@ func (m legend_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+e":
-			m.field.Focus()
-		case "enter":
 			if m.field.Focused() {
 				e := new(entry)
 				e.time = time.Now()
