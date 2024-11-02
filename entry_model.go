@@ -13,7 +13,6 @@ type entry_model struct {
 	fields    []field_struct
 	index     int
 	field     field
-	ready     bool
 }
 
 // type field interface {
@@ -57,11 +56,6 @@ func new_entry_model(q *quest) tea.Model {
 			name: "subtitle",
 			typ:  str,
 			fill: func(q *quest, i interface{}) { q.Subtitle = i.(string) },
-		},
-		{
-			name: "description",
-			typ:  str,
-			fill: func(q *quest, i interface{}) { q.Description = i.(string) },
 		},
 	}
 	m.switch_field()

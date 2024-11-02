@@ -12,14 +12,13 @@ import (
 )
 
 type quest struct {
-	dir         string
-	legend      []*entry
-	children    []*quest
-	parent      *quest
-	lore        []byte
-	Title       string
-	Subtitle    string
-	Description string
+	dir      string
+	legend   []*entry
+	children []*quest
+	parent   *quest
+	lore     []byte
+	Title    string
+	Subtitle string
 }
 
 const layout = time.DateTime
@@ -44,8 +43,26 @@ func (q *quest) open() {
 	q.read_parent()
 }
 
+func open(base string, name string) (*os.File, error) {
+	file, err := os.Open(filepath.Join(base, name))
+	if os.IsNotExist(err) {
+		return os.Open(filepath.Join(base, ".quests", name))
+	} else {
+		return file, err
+	}
+}
+
+func read(base string, name string) ([]byte, error) {
+	file, err := os.ReadFile(filepath.Join(base, name))
+	if os.IsNotExist(err) {
+		return os.ReadFile(filepath.Join(base, ".quests", name))
+	} else {
+		return file, err
+	}
+}
+
 func (q *quest) read_legend() error {
-	file, err := os.Open(filepath.Join(q.dir, "legend.log"))
+	file, err := open(q.dir, "legend.log")
 
 	if os.IsNotExist(err) {
 		return err
@@ -90,7 +107,7 @@ func (q *quest) write_legend() {
 }
 
 func (q *quest) read_metadata() error {
-	data, err := os.ReadFile(filepath.Join(q.dir, "quest.yml"))
+	data, err := read(q.dir, "quest.yml")
 	if os.IsNotExist(err) {
 		return err
 	} else {
@@ -117,7 +134,7 @@ func (q *quest) write_metadata() {
 }
 
 func (q *quest) read_lore() error {
-	file, err := os.Open(filepath.Join(q.dir, "lore.md"))
+	file, err := open(q.dir, "lore.md")
 	if os.IsNotExist(err) {
 		return err
 	} else {
@@ -142,21 +159,34 @@ func (q *quest) write_lore() {
 }
 
 func (q *quest) read_children() {
-	var dir string
-	switch q.dir {
-	case "":
-		dir = "."
-	default:
-		dir = q.dir
-	}
-	dirs, err := os.ReadDir(dir)
+	// var dir string
+	// switch q.dir {
+	// case "":
+	// 	dir = "."
+	// default:
+	//	dir = q.dir
+	// }
+
+	dirs, err := os.ReadDir(q.dir)
 	Check(err)
+	more_dirs, err := os.ReadDir(filepath.Join(q.dir, ".quests"))
 
 	quests := []*quest{}
 	for _, dir := range dirs {
-		if dir.IsDir() {
+		if dir.IsDir() && dir.Name() != ".quests" {
 			n := new(quest)
 			err = n.peek(filepath.Join(q.dir, dir.Name()))
+			if err == nil {
+				quests = append(quests, n)
+			} else if !os.IsNotExist(err) {
+				panic(err)
+			}
+		}
+	}
+	for _, dir := range more_dirs {
+		if dir.IsDir() && dir.Name() != ".quests" {
+			n := new(quest)
+			err = n.peek(filepath.Join(q.dir, ".quests", dir.Name()))
 			if err == nil {
 				quests = append(quests, n)
 			} else if !os.IsNotExist(err) {
@@ -169,7 +199,9 @@ func (q *quest) read_children() {
 
 func (q *quest) read_parent() {
 	dir := filepath.Dir(q.dir)
-
+	if filepath.Base(dir) == ".quests" {
+		dir = filepath.Dir(dir)
+	}
 	p := new(quest)
 	err := p.peek(dir)
 
