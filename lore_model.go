@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/charmbracelet/bubbles/textinput"
+	"github.com/charmbracelet/bubbles/textarea"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 type lore_model struct {
 	quest *quest
-	field textinput.Model
+	field textarea.Model
 }
 
 func (m lore_model) Init() tea.Cmd {
@@ -17,7 +17,7 @@ func (m lore_model) Init() tea.Cmd {
 func (m lore_model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	switch msg := msg.(type) {
-	case textinput.Model:
+	case textarea.Model:
 		m.field = msg
 	case tea.KeyMsg:
 		switch msg.String() {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -45,7 +46,7 @@ func init_models(q *quest, s styles) models {
 	lgm.quest = q
 
 	lm := lore_model{}
-	lm.field = textinput.New()
+	lm.field = textarea.New()
 	lm.quest = q
 
 	cm := children_model{}
