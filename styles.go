@@ -14,6 +14,10 @@ type styles struct {
 
 	body lipgloss.Style
 
+	menu_selected   lipgloss.Style
+	menu_unselected lipgloss.Style
+	menu_box        lipgloss.Style
+
 	child_title      lipgloss.Style
 	child_subtitle   lipgloss.Style
 	child_selected   lipgloss.Style
@@ -28,6 +32,8 @@ type styles struct {
 	quest_subtitle         lipgloss.Style
 
 	footer lipgloss.Style
+
+	main lipgloss.Style
 }
 
 func default_styles() styles {
@@ -39,7 +45,7 @@ func default_styles() styles {
 	s.fg = s.eson
 	s.bg = lipgloss.Color("0")
 
-	s.inside_width = 46
+	s.inside_width = 76
 
 	s.block_border = lipgloss.Border{
 		Top:         "▄",
@@ -52,45 +58,57 @@ func default_styles() styles {
 		BottomRight: "▀",
 	}
 
+	s.menu_selected = lipgloss.NewStyle().Padding(0, 3).Bold(true).Foreground(s.fg)
+	s.menu_unselected = lipgloss.NewStyle().Padding(0, 3).Faint(true).Foreground(s.fg)
+	s.menu_box = lipgloss.NewStyle().
+		AlignHorizontal(lipgloss.Center).
+		Width(s.inside_width).
+		PaddingBottom(1)
+
 	s.child_title = lipgloss.NewStyle().Bold(true)
 	s.child_subtitle = lipgloss.NewStyle().Faint(true)
 	s.child_unselected = lipgloss.NewStyle().
 		Border(lipgloss.NormalBorder()).
+		BorderForeground(s.fg).
 		Foreground(s.fg).
 		Padding(0, 1).
-		Width(23)
+		Width(s.inside_width / 2)
 	s.child_selected = lipgloss.NewStyle().
 		Border(s.block_border).
 		BorderForeground(s.fg).
 		Background(s.fg).
 		Foreground(s.bg).
-		Padding(0, 1).Width(23)
+		Padding(0, 1).Width(s.inside_width / 2)
 
 	s.quest_title = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(s.eson).
+		Foreground(s.fg).
 		Padding(0, 1)
 	s.quest_title_whitespace = []lipgloss.WhitespaceOption{
 		lipgloss.WithWhitespaceChars("─"),
-		lipgloss.WithWhitespaceForeground(s.eson),
+		lipgloss.WithWhitespaceForeground(s.fg),
 	}
-	s.quest_subtitle = lipgloss.NewStyle().Faint(true).Padding(0, 0, 1, 0)
+	s.quest_subtitle = lipgloss.NewStyle().Faint(true).Padding(0, 0, 1, 0).Foreground(s.fg)
 
 	s.child_info_title = lipgloss.NewStyle().
 		Bold(true).
-		Border(lipgloss.NormalBorder(), false, false, true, false).Width(19)
-	s.child_info_subtitle = s.quest_subtitle.Faint(true).Width(19)
-	s.child_info_box = lipgloss.NewStyle().Width(23).Padding(0, 2)
+		Border(lipgloss.NormalBorder(), false, false, true, false).
+		BorderForeground(s.fg).Width(s.inside_width/2 - 4).Foreground(s.fg)
+	s.child_info_subtitle = s.quest_subtitle.Faint(true).
+		Width(s.inside_width/2 - 4).
+		Foreground(s.fg)
+	s.child_info_box = lipgloss.NewStyle().Width(s.inside_width/2 - 2).PaddingLeft(2)
 
 	s.footer = lipgloss.NewStyle().
 		Width(s.inside_width).
 		Align(lipgloss.Center).
 		Faint(true).
-		Padding(2, 0, 0, 0)
+		Padding(2, 0, 0, 0).
+		Foreground(s.fg) // does everything need to be blue?
 
 	s.body = lipgloss.NewStyle().
 		Padding(1, 2).
-		Width(50).
-		Height(24).Foreground(s.fg)
+		Width(80).
+		Height(45)
 	return s
 }

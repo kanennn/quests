@@ -32,6 +32,17 @@ type models struct {
 	children_model children_model
 }
 
+const (
+	lore_id = iota
+	legend_id
+	children_id
+)
+
+type model_name struct {
+	name string
+	id   int
+}
+
 //todo how do we like, have pointers to sub and super quests without creating a recursive nightmare but that sort of preloads them
 //todo mayhaps active quests load name, desc, files, logs, info, and subquests/superquests
 //todo and then nonactive quests only load name and desc
@@ -47,6 +58,7 @@ func init_models(q *quest, s styles) models {
 
 	lm := lore_model{}
 	lm.field = textarea.New()
+	lm.field.CharLimit = 0
 	lm.quest = q
 
 	cm := children_model{}
@@ -157,7 +169,7 @@ func (m main_model) View() string {
 	case *wait_model:
 		body = m.active_model.View()
 	default:
-		body = header_view(m.active_quest, m.styles, m.active_model.View())
+		body = header_view(m.active_quest, m.styles, m.active_model.View(), m.active_model)
 	}
 
 	return lipgloss.Place(
@@ -169,7 +181,32 @@ func (m main_model) View() string {
 	)
 }
 
-func header_view(q *quest, s styles, content string) string {
+func header_view(q *quest, s styles, content string, model tea.Model) string {
+	model_names := []model_name{
+		{name: "lore", id: lore_id},
+		{name: "legend", id: legend_id},
+		{name: "children", id: children_id},
+	}
+	var selected_id int
+	switch model.(type) {
+	case lore_model:
+		selected_id = lore_id
+	case legend_model:
+		selected_id = legend_id
+	case children_model:
+		selected_id = children_id
+	}
+	var listings []string
+	for _, n := range model_names {
+		var model_listing string
+		if n.id == selected_id {
+			model_listing = s.menu_selected.Render(n.name)
+		} else {
+			model_listing = s.menu_unselected.Render(n.name)
+		}
+		listings = append(listings, model_listing)
+	}
+
 	header := lipgloss.JoinVertical(
 		lipgloss.Left,
 		lipgloss.PlaceHorizontal(
@@ -182,8 +219,14 @@ func header_view(q *quest, s styles, content string) string {
 			lipgloss.Center,
 			s.quest_subtitle.Render(q.Subtitle),
 		),
+		s.menu_box.Render(lipgloss.JoinHorizontal(lipgloss.Top, listings...)),
 	)
-	return lipgloss.JoinVertical(lipgloss.Left, header, content, s.footer.Render(q.dir))
+	return lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		content,
+		s.footer.Render(q.dir),
+	)
 }
 
 func tui() {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"io"
 	"os"
 	"path/filepath"
@@ -27,6 +28,10 @@ type entry struct {
 	time time.Time
 	text string
 	tag  string
+}
+
+func (q *quest) get_bit() []byte {
+	return bytes.Split(q.lore, []byte("\n"))[0]
 }
 
 func (q *quest) peek(path string) error {
