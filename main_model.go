@@ -59,6 +59,8 @@ func init_models(q *quest, s styles) models {
 	lm := lore_model{}
 	lm.field = textarea.New()
 	lm.field.CharLimit = 0
+	lm.field.SetWidth(s.inside_width)
+	lm.field.SetHeight(s.content_height)
 	lm.quest = q
 
 	cm := children_model{}

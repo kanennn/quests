@@ -8,7 +8,9 @@ type styles struct {
 	fg     lipgloss.Color
 	bg     lipgloss.Color
 
-	inside_width int
+	inside_width   int
+	inside_height  int
+	content_height int
 
 	block_border lipgloss.Border
 
@@ -46,6 +48,7 @@ func default_styles() styles {
 	s.bg = lipgloss.Color("0")
 
 	s.inside_width = 76
+	s.inside_height = 42
 
 	s.block_border = lipgloss.Border{
 		Top:         "▄",
@@ -106,9 +109,11 @@ func default_styles() styles {
 		Padding(2, 0, 0, 0).
 		Foreground(s.fg) // does everything need to be blue?
 
+	s.content_height = s.inside_height - 3 - 2 - 3
+
 	s.body = lipgloss.NewStyle().
 		Padding(1, 2).
-		Width(80).
-		Height(45)
+		Width(s.inside_width + 4).
+		Height(s.inside_height + 2)
 	return s
 }
